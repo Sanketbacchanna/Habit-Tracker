@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Habit Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4facfe">
+
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<style>
+body { font-family: Arial; background:#f5f7fa; text-align:center; margin:0; }
+h1 { margin:15px; }
+
+.controls {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  margin:10px;
+}
+
+select, input, button {
+  padding:8px;
+  margin:5px;
+}
+
+.table-container {
+  overflow-x:auto;
+}
+
+table {
+  margin:auto;
+  border-collapse:collapse;
+  background:white;
+  min-width:600px;
+}
+
+th, td {
+  border:1px solid #ddd;
+  padding:6px;
+  font-size:12px;
+}
+
+th {
+  background:#4facfe;
+  color:white;
+}
+
+.percent {
+  color:green;
+  font-weight:bold;
+}
+
+canvas {
+  margin-top:20px;
+  max-width:95%;
+  background:white;
+}
+
+/* Mobile */
+@media(max-width:600px){
+  th, td { font-size:10px; padding:4px; }
+}
+</style>
+</head>
+<body>
+
+<h1>📊 Smart Habit Tracker</h1>
+
+<div class="controls">
+  <select id="monthSelect"></select>
+  <input type="text" id="habitInput" placeholder="Enter Habit">
+  <button onclick="addHabit()">Add</button>
+</div>
+
+<div class="table-container">
+<table>
+<thead><tr id="headerRow"></tr></thead>
+<tbody id="body"></tbody>
+</table>
+</div>
+
+<h2>😴 Sleep Graph</h2>
+<div style="overflow-x:auto;">
+  <canvas id="chart" width="100%" height="250"></canvas>
+</div>
+
+<script>
+let currentMonth = new Date().getMonth();
+const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const monthSelect = document.getElementById("monthSelect");
+
+// Fill months
+months.forEach((m,i)=>{
+  let opt = document.createElement("option");
+  opt.value=i; opt.textContent=m;
+  monthSelect.appendChild(opt);
+});
+monthSelect.value = currentMonth;
+monthSelect.onchange = changeMonth;
+
+function getDays(month){
+  return new Date(2026, month+1, 0).getDate();
+}
+
+// Storage
+function getKey(){ return 'habit_'+currentMonth; }
+function load(){ return JSON.parse(localStorage.getItem(getKey())) || []; }
+function save(data){ localStorage.setItem(getKey(), JSON.stringify(data)); }
+
+let habits = load();
+
+// Render table
+function render(){
+  const DAYS = getDays(currentMonth);
+  const header = document.getElementById('headerRow');
+  const body = document.getElementById('body');
+
+  // Header
+  header.innerHTML = "<th>Habit</th>";
+  body.innerHTML = "";
+
+  for(let i=1;i<=DAYS;i++) {
+    header.innerHTML += `<th>${i}</th>`;
+  }
+  header.innerHTML += "<th>%</th><th>X</th>";
+
+  // Habit rows
+  habits.forEach((h,i)=>{
+    let done = 0;
+    let row = `<tr><td>${h.name}</td>`;
+
+    h.days.forEach((d,j)=>{
+      if(d) done++;
+
+      let symbol = d ? "✅" : "❌";
+      let color = d ? "#d4edda" : "#f8d7da";
+
+      row += `
+        <td 
+          style="background:${color}; cursor:pointer; font-size:16px"
+          onclick="toggle(${i},${j})">
+          ${symbol}
+        </td>`;
+    });
+
+    let percent = Math.round((done / DAYS) * 100);
+    row += `<td class='percent'>${percent}%</td>`;
+    row += `<td><button onclick='del(${i})'>X</button></td></tr>`;
+
+    body.innerHTML += row;
+  });
+
+  // ✅ DAILY PROGRESS ROW
+  let dailyRow = "<tr><td><b>Daily Done</b></td>";
+
+  for(let j=0; j<DAYS; j++){
+    let doneCount = 0;
+
+    habits.forEach(h => {
+      if(h.days[j]) doneCount++;
+    });
+
+    let total = habits.length;
+    let percent = total ? (doneCount / total) * 100 : 0;
+
+    let color = percent === 100 ? "#d4edda" :
+                percent >= 50 ? "#fff3cd" :
+                "#f8d7da";
+
+    dailyRow += `
+      <td style="background:${color}; font-weight:bold">
+        ${doneCount}/${total}
+      </td>`;
+  }
+
+  dailyRow += "<td></td><td></td></tr>";
+
+  body.innerHTML += dailyRow;
+
+  // Draw graph
+  drawChart();
+}
+
+// Habit actions
+function toggle(i,j){
+  habits[i].days[j] = !habits[i].days[j];
+  save(habits);
+  render();
+}
+
+function addHabit(){
+  const name = document.getElementById('habitInput').value;
+  if(!name) return;
+
+  const DAYS = getDays(currentMonth);
+  habits.push({name, days:Array(DAYS).fill(false)});
+  save(habits);
+  render();
+}
+
+function del(i){
+  habits.splice(i,1);
+  save(habits);
+  render();
+}
+
+function changeMonth(){
+  currentMonth = parseInt(monthSelect.value);
+  habits = load();
+  render();
+}
+
+// Sleep Data
+function getSleep(){
+  return JSON.parse(localStorage.getItem('sleep_'+currentMonth)) 
+         || Array(getDays(currentMonth)).fill(6);
+}
+
+function setSleep(data){
+  localStorage.setItem('sleep_'+currentMonth, JSON.stringify(data));
+}
+
+// Graph
+function drawChart(){
+  const canvas = document.getElementById('chart');
+  const ctx = canvas.getContext('2d');
+  const table = document.querySelector("table");
+
+  let data = getSleep();
+  if(!data) return;
+
+  const DAYS = data.length;
+
+  // Match table width
+  canvas.width = table.offsetWidth;
+  canvas.height = 320;
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const stepX = canvas.width / DAYS;
+
+  ctx.beginPath();
+
+  data.forEach((val,i)=>{
+    let x = i * stepX + stepX/2;
+    let y = canvas.height - val * 20 - 50;
+
+    if(i===0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+
+    // point
+    ctx.fillRect(x-2,y-2,4,4);
+
+    // sleep label
+    ctx.font = "10px Arial";
+    ctx.fillText(val + 'h', x-8, y-10);
+  });
+
+  ctx.stroke();
+
+  // ✅ DRAW ALL DATES (ROTATED)
+  ctx.font = "10px Arial";
+
+  data.forEach((_, i)=>{
+    let x = i * stepX + stepX/2;
+
+    ctx.save();
+    ctx.translate(x, canvas.height - 5);
+    ctx.rotate(-Math.PI / 4); // rotate 45°
+    ctx.fillText((i+1), 0, 0);
+    ctx.restore();
+  });
+
+  // click to edit
+  canvas.onclick = function(e){
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const day = Math.floor(x / stepX);
+
+    if(day < 0 || day >= DAYS) return;
+
+    let hours = prompt("Enter sleep hours:", data[day]);
+    if(hours !== null){
+      data[day] = parseInt(hours) || 0;
+      setSleep(data);
+      drawChart();
+    }
+  };
+}
+// PWA
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js');
+}
+
+// Start
+window.onload = render;
+</script>
+
+</body>
+</html>
