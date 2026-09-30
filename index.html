@@ -5,11 +5,11 @@
 <title>Smart Habit Tracker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#4facfe">
 
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="./Icons/icon-192.png">
+<link rel="apple-touch-icon" href="./Icons/icon-192.png">
 
 <style>
 body { font-family: Arial; background:#f5f7fa; text-align:center; margin:0; }
@@ -293,7 +293,7 @@ function drawChart(){
 }
 // PWA
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js');
+  navigator.serviceWorker.register('./sw.js');
 }
 
 // Start
