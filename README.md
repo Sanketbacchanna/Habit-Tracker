@@ -8,7 +8,7 @@ A **Smart Habit Tracker** is a responsive **Progressive Web App (PWA)** that hel
 - ➕ Add unlimited custom habits
 - ✅ Mark daily habit completion
 - 📊 Automatic habit completion percentage
-- 🗓️ Create and manage a weekly timetable with days, times, and categories
+- 🗓️ Create and manage a daily timetable with times and categories
 - 🗑️ Delete habits anytime
 - 😴 Sleep tracking with graphical visualization
 - 💾 Local Storage support

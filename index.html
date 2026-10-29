@@ -116,13 +116,10 @@ h1 { margin-bottom: 8px; font-size: clamp(29px, 4vw, 42px); letter-spacing: -1.7
 .schedule-form .select-field { width: 100%; min-width: 118px; }
 .schedule-form .time-field { width: 125px; }
 .schedule-form .primary-button { white-space: nowrap; }
-.schedule-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; }
-.day-column { min-height: 164px; padding: 12px 10px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
-.day-heading { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 11px; color: var(--ink); font-size: 12px; font-weight: 750; }
-.day-count { color: var(--muted); font-size: 10px; font-weight: 600; }
-.schedule-empty { margin: 0; color: #9aa8a2; font-size: 11px; line-height: 1.5; }
-.schedule-item { position: relative; margin-bottom: 8px; padding: 9px 8px; border-radius: 9px; background: var(--green-pale); }
-.schedule-item:last-child { margin-bottom: 0; }
+.daily-repeat { flex: 0 0 auto; padding: 8px 11px; border-radius: 999px; background: var(--green-pale); color: var(--green-dark); font-size: 11px; font-weight: 750; }
+.schedule-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.schedule-empty { grid-column: 1 / -1; margin: 0; padding: 18px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); font-size: 13px; line-height: 1.5; text-align: center; }
+.schedule-item { position: relative; min-height: 84px; margin-bottom: 0; padding: 13px; border: 1px solid #dcebe2; border-radius: 9px; background: var(--green-pale); }
 .schedule-time { display: block; margin-bottom: 4px; color: var(--green-dark); font-size: 10px; font-weight: 750; }
 .schedule-activity { display: block; padding-right: 14px; overflow-wrap: anywhere; color: var(--ink); font-size: 11px; font-weight: 700; line-height: 1.35; }
 .schedule-category { display: inline-block; margin-top: 5px; color: var(--muted); font-size: 9px; }
@@ -133,10 +130,6 @@ h1 { margin-bottom: 8px; font-size: clamp(29px, 4vw, 42px); letter-spacing: -1.7
 .chart-wrap { overflow-x: auto; }
 #chart { display: block; width: 100%; min-width: 640px; height: 280px; border-radius: 12px; background: #fbfcfa; cursor: crosshair; }
 .chart-hint { margin: 10px 0 0; color: var(--muted); font-size: 11px; }
-
-@media (max-width: 850px) {
-  .schedule-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
 
 @media (max-width: 620px) {
   .app-shell { width: min(100% - 24px, 520px); padding-top: 17px; }
@@ -154,12 +147,7 @@ h1 { margin-bottom: 8px; font-size: clamp(29px, 4vw, 42px); letter-spacing: -1.7
   .schedule-name, .schedule-form .form-message { grid-column: 1 / -1; }
   .schedule-form .time-field { width: 100%; }
   .schedule-form .primary-button { width: 100%; }
-  .schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .day-column { min-height: 145px; }
-}
-
-@media (max-width: 360px) {
-  .schedule-grid { grid-template-columns: 1fr; }
+  .schedule-list { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -189,7 +177,7 @@ h1 { margin-bottom: 8px; font-size: clamp(29px, 4vw, 42px); letter-spacing: -1.7
     </article>
     <article class="summary-card">
       <span class="summary-icon" aria-hidden="true">🗓️</span>
-      <div><p class="summary-label">Planned this week</p><p class="summary-value" id="scheduleCount">0 activities</p></div>
+      <div><p class="summary-label">Daily activities</p><p class="summary-value" id="scheduleCount">0 activities</p></div>
     </article>
     <article class="summary-card">
       <span class="summary-icon" aria-hidden="true">✨</span>
@@ -224,19 +212,16 @@ h1 { margin-bottom: 8px; font-size: clamp(29px, 4vw, 42px); letter-spacing: -1.7
   <section class="panel" aria-labelledby="scheduleTitle">
     <div class="panel-heading">
       <div>
-        <h2 class="panel-title" id="scheduleTitle"><span class="section-icon" aria-hidden="true">🗓️</span>My weekly timetable</h2>
-        <p class="panel-description">Give your week a gentle structure. Add activities and see your schedule at a glance.</p>
+        <h2 class="panel-title" id="scheduleTitle"><span class="section-icon" aria-hidden="true">🗓️</span>My daily timetable</h2>
+        <p class="panel-description">Plan your routine once and follow the same schedule every day.</p>
       </div>
+      <span class="daily-repeat">↻ Repeats every day</span>
     </div>
 
     <form class="schedule-form" id="scheduleForm">
       <div class="form-field schedule-name">
         <label for="activityInput">Activity</label>
         <input class="field" id="activityInput" type="text" placeholder="e.g. Morning walk" maxlength="60" required>
-      </div>
-      <div class="form-field">
-        <label for="daySelect">Day</label>
-        <select class="select-field" id="daySelect"></select>
       </div>
       <div class="form-field">
         <label for="categorySelect">Category</label>
@@ -252,10 +237,10 @@ h1 { margin-bottom: 8px; font-size: clamp(29px, 4vw, 42px); letter-spacing: -1.7
         <label for="endTime">Ends</label>
         <input class="field time-field" id="endTime" type="time" value="10:00" required>
       </div>
-      <button class="primary-button" type="submit">+ Add to week</button>
+      <button class="primary-button" type="submit">+ Add activity</button>
       <p class="form-message" id="scheduleMessage" role="status" aria-live="polite"></p>
     </form>
-    <div class="schedule-grid" id="scheduleGrid" aria-live="polite"></div>
+    <div class="schedule-list" id="scheduleList" aria-live="polite"></div>
   </section>
 
   <section class="panel sleep-panel" aria-labelledby="sleepTitle">
@@ -272,14 +257,17 @@ h1 { margin-bottom: 8px; font-size: clamp(29px, 4vw, 42px); letter-spacing: -1.7
 
 <script>
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-const weekDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const monthSelect = document.getElementById("monthSelect");
 const habitInput = document.getElementById("habitInput");
 const scheduleForm = document.getElementById("scheduleForm");
 const scheduleMessage = document.getElementById("scheduleMessage");
 let currentMonth = new Date().getMonth();
 let habits = [];
-let schedule = JSON.parse(localStorage.getItem("habitly_schedule")) || [];
+const storedSchedule = JSON.parse(localStorage.getItem("habitly_schedule")) || [];
+let schedule = storedSchedule.map(({ day, ...item }) => item);
+if (storedSchedule.some(item => Object.hasOwn(item, "day"))) {
+  localStorage.setItem("habitly_schedule", JSON.stringify(schedule));
+}
 
 months.forEach((month, index) => {
   const option = document.createElement("option");
@@ -289,13 +277,6 @@ months.forEach((month, index) => {
 });
 monthSelect.value = currentMonth;
 
-weekDays.forEach((day, index) => {
-  const option = document.createElement("option");
-  option.value = index;
-  option.textContent = day;
-  document.getElementById("daySelect").appendChild(option);
-});
-document.getElementById("daySelect").value = new Date().getDay();
 document.getElementById("todayLabel").textContent = new Intl.DateTimeFormat(undefined, {
   weekday: "long", month: "long", day: "numeric"
 }).format(new Date());
@@ -410,43 +391,31 @@ function saveSchedule() {
 }
 
 function renderSchedule() {
-  const grid = document.getElementById("scheduleGrid");
-  grid.innerHTML = "";
-
-  weekDays.forEach((day, dayIndex) => {
-    const dayItems = schedule
-      .filter(item => item.day === dayIndex)
-      .sort((first, second) => first.start.localeCompare(second.start));
-    const column = document.createElement("section");
-    column.className = "day-column";
-    column.setAttribute("aria-label", `${day} schedule`);
-    const itemsHtml = dayItems.length
-      ? dayItems.map(item => `<article class="schedule-item">
-          <span class="schedule-time">${escapeHtml(item.start)} – ${escapeHtml(item.end)}</span>
-          <span class="schedule-activity">${escapeHtml(item.activity)}</span>
-          <span class="schedule-category">${escapeHtml(item.category)}</span>
-            <button class="schedule-delete" type="button" aria-label="Remove ${escapeHtml(item.activity)} from ${day}">×</button>
-        </article>`).join("")
-      : `<p class="schedule-empty">Nothing planned yet</p>`;
-    column.innerHTML = `<h3 class="day-heading">${day}<span class="day-count">${dayItems.length || ""}</span></h3>${itemsHtml}`;
-      column.querySelectorAll(".schedule-delete").forEach((button, index) => {
-        button.dataset.scheduleId = dayItems[index].id;
-      });
-      grid.appendChild(column);
-    });
-    updateSummary();
+  const list = document.getElementById("scheduleList");
+  const dailyItems = schedule.sort((first, second) => first.start.localeCompare(second.start));
+  list.innerHTML = dailyItems.length
+    ? dailyItems.map(item => `<article class="schedule-item">
+        <span class="schedule-time">${escapeHtml(item.start)} – ${escapeHtml(item.end)}</span>
+        <span class="schedule-activity">${escapeHtml(item.activity)}</span>
+        <span class="schedule-category">${escapeHtml(item.category)}</span>
+        <button class="schedule-delete" type="button" aria-label="Remove ${escapeHtml(item.activity)}">×</button>
+      </article>`).join("")
+    : `<p class="schedule-empty">Your everyday routine is still open. Add a time block above to get started.</p>`;
+  list.querySelectorAll(".schedule-delete").forEach((button, index) => {
+    button.dataset.scheduleId = dailyItems[index].id;
+  });
+  updateSummary();
 }
 
-document.getElementById("scheduleGrid").addEventListener("click", event => {
-    if (!(event.target instanceof Element)) return;
-    const deleteButton = event.target.closest(".schedule-delete");
-    if (deleteButton) deleteScheduleItem(deleteButton.dataset.scheduleId);
+document.getElementById("scheduleList").addEventListener("click", event => {
+  if (!(event.target instanceof Element)) return;
+  const deleteButton = event.target.closest(".schedule-delete");
+  if (deleteButton) deleteScheduleItem(deleteButton.dataset.scheduleId);
 });
 
 scheduleForm.addEventListener("submit", event => {
   event.preventDefault();
   const activity = document.getElementById("activityInput").value.trim();
-  const day = Number(document.getElementById("daySelect").value);
   const start = document.getElementById("startTime").value;
   const end = document.getElementById("endTime").value;
   const category = document.getElementById("categorySelect").value;
@@ -457,20 +426,15 @@ scheduleForm.addEventListener("submit", event => {
     return;
   }
 
-  const overlaps = schedule.some(item =>
-    item.day === day && start < item.end && end > item.start
-  );
+  const overlaps = schedule.some(item => start < item.end && end > item.start);
   if (overlaps) {
-    scheduleMessage.textContent = "That time overlaps another activity on this day.";
+    scheduleMessage.textContent = "That time overlaps another activity in your daily routine.";
     return;
   }
 
-  schedule.push({ id: crypto.randomUUID(), activity, day, start, end, category });
+  schedule.push({ id: crypto.randomUUID(), activity, start, end, category });
   saveSchedule();
   scheduleForm.reset();
-  document.getElementById("daySelect").value = day;
-  document.getElementById("startTime").value = start;
-  document.getElementById("endTime").value = end;
   renderSchedule();
   document.getElementById("activityInput").focus();
 });

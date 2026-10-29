@@ -1,4 +1,4 @@
-const CACHE_NAME = "habit-v4";
+const CACHE_NAME = "habit-v5";
 const APP_SHELL = [
   "./",
   "./index.html",
