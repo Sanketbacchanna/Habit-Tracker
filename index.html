@@ -213,7 +213,7 @@ h1 { margin-bottom: 8px; font-size: clamp(29px, 4vw, 42px); letter-spacing: -1.7
     <div class="panel-heading">
       <div>
         <h2 class="panel-title" id="scheduleTitle"><span class="section-icon" aria-hidden="true">🗓️</span>My daily timetable</h2>
-        <p class="panel-description">Plan your routine once and follow the same schedule every day.</p>
+        <p class="panel-description">Plan your routine once and follow the same schedule every day. Use 24-hour time (4:30 PM = 16:30).</p>
       </div>
       <span class="daily-repeat">↻ Repeats every day</span>
     </div>
@@ -422,7 +422,7 @@ scheduleForm.addEventListener("submit", event => {
   scheduleMessage.textContent = "";
 
   if (!activity || !start || !end || start >= end) {
-    scheduleMessage.textContent = "Choose an activity and an end time after its start time.";
+    scheduleMessage.textContent = "The end time must be later than the start time. For 4:30 PM, enter 16:30.";
     return;
   }
 
