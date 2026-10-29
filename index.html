@@ -2,303 +2,579 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Smart Habit Tracker</title>
+<title>Habitly — Habits &amp; Schedule</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#172b2a">
+<meta name="description" content="Build better habits, plan your week, and track your sleep in one simple dashboard.">
 
 <link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#4facfe">
-
 <link rel="icon" href="./Icons/icon-192.png">
 <link rel="apple-touch-icon" href="./Icons/icon-192.png">
 
 <style>
-body { font-family: Arial; background:#f5f7fa; text-align:center; margin:0; }
-h1 { margin:15px; }
-
-.controls {
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  margin:10px;
+:root {
+  color-scheme: light;
+  --ink: #172b2a;
+  --muted: #6b7b78;
+  --paper: #f5f7f3;
+  --surface: #ffffff;
+  --line: #e4eae5;
+  --green: #2f7864;
+  --green-dark: #235d4d;
+  --green-pale: #e8f3ed;
+  --coral: #c66d58;
+  --shadow: 0 12px 32px rgba(27, 55, 47, .06);
 }
 
-select, input, button {
-  padding:8px;
-  margin:5px;
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 15px;
 }
 
-.table-container {
-  overflow-x:auto;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-table {
-  margin:auto;
-  border-collapse:collapse;
-  background:white;
-  min-width:600px;
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+
+.app-shell { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 28px 0 56px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 30px; }
+.brand { display: flex; align-items: center; gap: 11px; color: var(--ink); text-decoration: none; font-size: 20px; font-weight: 750; letter-spacing: -.6px; }
+.brand-mark { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 12px; background: var(--ink); color: #d3efb4; font-size: 19px; }
+.top-note { color: var(--muted); font-size: 13px; }
+
+.intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin: 0 0 25px; }
+.eyebrow { margin: 0 0 9px; color: var(--green); font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+h1, h2, p { margin-top: 0; }
+h1 { margin-bottom: 8px; font-size: clamp(29px, 4vw, 42px); letter-spacing: -1.7px; line-height: 1.1; }
+.intro-copy { max-width: 560px; margin: 0; color: var(--muted); line-height: 1.6; }
+.today-pill { flex: 0 0 auto; padding: 10px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); font-size: 13px; font-weight: 650; }
+
+.summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px; }
+.summary-card { display: flex; align-items: center; gap: 14px; min-height: 91px; padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); }
+.summary-icon { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border-radius: 13px; background: var(--green-pale); font-size: 19px; }
+.summary-label { margin-bottom: 4px; color: var(--muted); font-size: 12px; }
+.summary-value { margin: 0; font-size: 21px; font-weight: 750; letter-spacing: -.5px; }
+
+.panel { margin-bottom: 20px; padding: 23px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); }
+.panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
+.panel-title { margin-bottom: 5px; font-size: 19px; letter-spacing: -.45px; }
+.panel-description { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.section-icon { margin-right: 7px; }
+
+.habit-form, .schedule-form { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-bottom: 18px; }
+.field, .select-field {
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  outline: none;
+  background: #fff;
+  color: var(--ink);
+}
+.field:focus, .select-field:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(47, 120, 100, .12); }
+.habit-form .field { width: min(300px, 100%); }
+.primary-button { min-height: 42px; padding: 9px 15px; border: 0; border-radius: 10px; background: var(--green); color: #fff; font-weight: 700; transition: background .15s ease, transform .15s ease; }
+.primary-button:hover { transform: translateY(-1px); background: var(--green-dark); }
+.primary-button:focus-visible, .delete-button:focus-visible, .habit-toggle:focus-visible { outline: 3px solid rgba(47, 120, 100, .3); outline-offset: 2px; }
+.form-message { width: 100%; margin: 0; color: #a64e3c; font-size: 12px; }
+
+.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+.habit-table { width: 100%; min-width: 880px; border-collapse: collapse; text-align: center; }
+.habit-table th, .habit-table td { min-width: 30px; padding: 8px 5px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+.habit-table th { position: sticky; top: 0; background: #f8faf7; color: var(--muted); font-size: 10px; font-weight: 750; }
+.habit-table th:first-child, .habit-table td:first-child { position: sticky; left: 0; min-width: 142px; background: var(--surface); text-align: left; }
+.habit-table th:first-child { z-index: 1; background: #f8faf7; }
+.habit-table th:last-child, .habit-table td:last-child { min-width: 42px; }
+.habit-table tbody tr:last-child td { border-bottom: 0; }
+.habit-name { max-width: 140px; overflow: hidden; color: var(--ink) !important; font-size: 12px !important; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.habit-toggle { width: 25px; height: 25px; padding: 0; border: 0; border-radius: 8px; background: #f4f6f3; color: #9aa8a2; font-size: 12px; }
+.habit-toggle.is-done { background: var(--green-pale); color: var(--green); }
+.percent { color: var(--green) !important; font-weight: 750; }
+.delete-button { border: 0; background: transparent; color: #a0aaa6; font-size: 17px; }
+.delete-button:hover { color: var(--coral); }
+.daily-row td { background: #f8faf7 !important; font-weight: 700; }
+.empty-cell { padding: 26px !important; color: var(--muted) !important; text-align: center !important; }
+
+.schedule-form { align-items: flex-end; padding: 15px; border: 1px solid var(--line); border-radius: 13px; background: #fafbf9; }
+.form-field { display: grid; gap: 6px; }
+.form-field label { color: var(--muted); font-size: 11px; font-weight: 700; }
+.schedule-name { flex: 1 1 180px; }
+.schedule-form .select-field { width: 100%; min-width: 118px; }
+.schedule-form .time-field { width: 125px; }
+.schedule-form .primary-button { white-space: nowrap; }
+.schedule-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; }
+.day-column { min-height: 164px; padding: 12px 10px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.day-heading { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 11px; color: var(--ink); font-size: 12px; font-weight: 750; }
+.day-count { color: var(--muted); font-size: 10px; font-weight: 600; }
+.schedule-empty { margin: 0; color: #9aa8a2; font-size: 11px; line-height: 1.5; }
+.schedule-item { position: relative; margin-bottom: 8px; padding: 9px 8px; border-radius: 9px; background: var(--green-pale); }
+.schedule-item:last-child { margin-bottom: 0; }
+.schedule-time { display: block; margin-bottom: 4px; color: var(--green-dark); font-size: 10px; font-weight: 750; }
+.schedule-activity { display: block; padding-right: 14px; overflow-wrap: anywhere; color: var(--ink); font-size: 11px; font-weight: 700; line-height: 1.35; }
+.schedule-category { display: inline-block; margin-top: 5px; color: var(--muted); font-size: 9px; }
+.schedule-delete { position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #71847c; font-size: 15px; line-height: 1; }
+.schedule-delete:hover { background: #fff; color: var(--coral); }
+
+.sleep-panel { margin-bottom: 0; }
+.chart-wrap { overflow-x: auto; }
+#chart { display: block; width: 100%; min-width: 640px; height: 280px; border-radius: 12px; background: #fbfcfa; cursor: crosshair; }
+.chart-hint { margin: 10px 0 0; color: var(--muted); font-size: 11px; }
+
+@media (max-width: 850px) {
+  .schedule-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
-th, td {
-  border:1px solid #ddd;
-  padding:6px;
-  font-size:12px;
+@media (max-width: 620px) {
+  .app-shell { width: min(100% - 24px, 520px); padding-top: 17px; }
+  .topbar { margin-bottom: 25px; }
+  .top-note { display: none; }
+  .intro { align-items: flex-start; flex-direction: column; gap: 13px; }
+  .summary-grid { grid-template-columns: 1fr; gap: 9px; }
+  .summary-card { min-height: 72px; padding: 13px; }
+  .summary-icon { width: 38px; height: 38px; }
+  .panel { padding: 16px 13px; border-radius: 15px; }
+  .panel-heading { flex-direction: column; gap: 12px; }
+  .habit-form { align-items: stretch; }
+  .habit-form .field { flex: 1 1 150px; width: auto; }
+  .schedule-form { display: grid; grid-template-columns: 1fr 1fr; align-items: end; padding: 12px; }
+  .schedule-name, .schedule-form .form-message { grid-column: 1 / -1; }
+  .schedule-form .time-field { width: 100%; }
+  .schedule-form .primary-button { width: 100%; }
+  .schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .day-column { min-height: 145px; }
 }
 
-th {
-  background:#4facfe;
-  color:white;
-}
-
-.percent {
-  color:green;
-  font-weight:bold;
-}
-
-canvas {
-  margin-top:20px;
-  max-width:95%;
-  background:white;
-}
-
-/* Mobile */
-@media(max-width:600px){
-  th, td { font-size:10px; padding:4px; }
+@media (max-width: 360px) {
+  .schedule-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 <body>
+<main class="app-shell">
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Habitly home">
+      <span class="brand-mark" aria-hidden="true">✓</span>
+      <span>habitly</span>
+    </a>
+    <span class="top-note">A little better, every day.</span>
+  </header>
 
-<h1>📊 Smart Habit Tracker</h1>
+  <section class="intro" aria-labelledby="pageTitle">
+    <div>
+      <p class="eyebrow">Your personal rhythm</p>
+      <h1 id="pageTitle">Make room for what matters.</h1>
+      <p class="intro-copy">Build steady habits, make a plan that feels good, and celebrate the progress you make along the way.</p>
+    </div>
+    <div class="today-pill" id="todayLabel"></div>
+  </section>
 
-<div class="controls">
-  <select id="monthSelect"></select>
-  <input type="text" id="habitInput" placeholder="Enter Habit">
-  <button onclick="addHabit()">Add</button>
-</div>
+  <section class="summary-grid" aria-label="Your progress">
+    <article class="summary-card">
+      <span class="summary-icon" aria-hidden="true">🌱</span>
+      <div><p class="summary-label">Habits to grow</p><p class="summary-value" id="habitCount">0</p></div>
+    </article>
+    <article class="summary-card">
+      <span class="summary-icon" aria-hidden="true">🗓️</span>
+      <div><p class="summary-label">Planned this week</p><p class="summary-value" id="scheduleCount">0 activities</p></div>
+    </article>
+    <article class="summary-card">
+      <span class="summary-icon" aria-hidden="true">✨</span>
+      <div><p class="summary-label">Today's check-ins</p><p class="summary-value" id="todayProgress">0 / 0</p></div>
+    </article>
+  </section>
 
-<div class="table-container">
-<table>
-<thead><tr id="headerRow"></tr></thead>
-<tbody id="body"></tbody>
-</table>
-</div>
+  <section class="panel" aria-labelledby="habitsTitle">
+    <div class="panel-heading">
+      <div>
+        <h2 class="panel-title" id="habitsTitle"><span class="section-icon" aria-hidden="true">🌿</span>Monthly habit tracker</h2>
+        <p class="panel-description">Small actions add up. Tap a day to mark a habit complete.</p>
+      </div>
+      <label class="sr-only" for="monthSelect">Choose month</label>
+      <select class="select-field" id="monthSelect" aria-label="Choose month"></select>
+    </div>
 
-<h2>😴 Sleep Graph</h2>
-<div style="overflow-x:auto;">
-  <canvas id="chart" width="100%" height="250"></canvas>
-</div>
+    <form class="habit-form" id="habitForm">
+      <label class="sr-only" for="habitInput">New habit name</label>
+      <input class="field" type="text" id="habitInput" placeholder="e.g. Read for 15 minutes" maxlength="60" required>
+      <button class="primary-button" type="submit">+ Add a habit</button>
+    </form>
+
+    <div class="table-scroll">
+      <table class="habit-table" aria-label="Monthly habit completion">
+        <thead><tr id="headerRow"></tr></thead>
+        <tbody id="body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="scheduleTitle">
+    <div class="panel-heading">
+      <div>
+        <h2 class="panel-title" id="scheduleTitle"><span class="section-icon" aria-hidden="true">🗓️</span>My weekly timetable</h2>
+        <p class="panel-description">Give your week a gentle structure. Add activities and see your schedule at a glance.</p>
+      </div>
+    </div>
+
+    <form class="schedule-form" id="scheduleForm">
+      <div class="form-field schedule-name">
+        <label for="activityInput">Activity</label>
+        <input class="field" id="activityInput" type="text" placeholder="e.g. Morning walk" maxlength="60" required>
+      </div>
+      <div class="form-field">
+        <label for="daySelect">Day</label>
+        <select class="select-field" id="daySelect"></select>
+      </div>
+      <div class="form-field">
+        <label for="categorySelect">Category</label>
+        <select class="select-field" id="categorySelect">
+          <option>Personal</option><option>Work</option><option>Study</option><option>Health</option><option>Routine</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="startTime">Starts</label>
+        <input class="field time-field" id="startTime" type="time" value="09:00" required>
+      </div>
+      <div class="form-field">
+        <label for="endTime">Ends</label>
+        <input class="field time-field" id="endTime" type="time" value="10:00" required>
+      </div>
+      <button class="primary-button" type="submit">+ Add to week</button>
+      <p class="form-message" id="scheduleMessage" role="status" aria-live="polite"></p>
+    </form>
+    <div class="schedule-grid" id="scheduleGrid" aria-live="polite"></div>
+  </section>
+
+  <section class="panel sleep-panel" aria-labelledby="sleepTitle">
+    <div class="panel-heading">
+      <div>
+        <h2 class="panel-title" id="sleepTitle"><span class="section-icon" aria-hidden="true">🌙</span>Sleep, at a glance</h2>
+        <p class="panel-description">Notice your patterns and make space for the rest you need.</p>
+      </div>
+    </div>
+    <div class="chart-wrap"><canvas id="chart" aria-label="Sleep hours per day. Click a date to update its sleep hours."></canvas></div>
+    <p class="chart-hint">Click a day on the chart to update your sleep hours. Your data stays on this device.</p>
+  </section>
+</main>
 
 <script>
-let currentMonth = new Date().getMonth();
-const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const weekDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const monthSelect = document.getElementById("monthSelect");
+const habitInput = document.getElementById("habitInput");
+const scheduleForm = document.getElementById("scheduleForm");
+const scheduleMessage = document.getElementById("scheduleMessage");
+let currentMonth = new Date().getMonth();
+let habits = [];
+let schedule = JSON.parse(localStorage.getItem("habitly_schedule")) || [];
 
-// Fill months
-months.forEach((m,i)=>{
-  let opt = document.createElement("option");
-  opt.value=i; opt.textContent=m;
-  monthSelect.appendChild(opt);
+months.forEach((month, index) => {
+  const option = document.createElement("option");
+  option.value = index;
+  option.textContent = month;
+  monthSelect.appendChild(option);
 });
 monthSelect.value = currentMonth;
-monthSelect.onchange = changeMonth;
 
-function getDays(month){
-  return new Date(2026, month+1, 0).getDate();
+weekDays.forEach((day, index) => {
+  const option = document.createElement("option");
+  option.value = index;
+  option.textContent = day;
+  document.getElementById("daySelect").appendChild(option);
+});
+document.getElementById("daySelect").value = new Date().getDay();
+document.getElementById("todayLabel").textContent = new Intl.DateTimeFormat(undefined, {
+  weekday: "long", month: "long", day: "numeric"
+}).format(new Date());
+
+function getDays(month) {
+  return new Date(new Date().getFullYear(), month + 1, 0).getDate();
 }
 
-// Storage
-function getKey(){ return 'habit_'+currentMonth; }
-function load(){ return JSON.parse(localStorage.getItem(getKey())) || []; }
-function save(data){ localStorage.setItem(getKey(), JSON.stringify(data)); }
+function getHabitKey() {
+  return "habit_" + currentMonth;
+}
 
-let habits = load();
+function loadHabits() {
+  habits = JSON.parse(localStorage.getItem(getHabitKey())) || [];
+}
 
-// Render table
-function render(){
-  const DAYS = getDays(currentMonth);
-  const header = document.getElementById('headerRow');
-  const body = document.getElementById('body');
+function saveHabits() {
+  localStorage.setItem(getHabitKey(), JSON.stringify(habits));
+}
 
-  // Header
-  header.innerHTML = "<th>Habit</th>";
+function updateSummary() {
+  const todayIndex = new Date().getDate() - 1;
+  const completedToday = habits.filter(habit => habit.days[todayIndex]).length;
+  document.getElementById("habitCount").textContent = habits.length;
+  document.getElementById("todayProgress").textContent = `${completedToday} / ${habits.length}`;
+  document.getElementById("scheduleCount").textContent = `${schedule.length} ${schedule.length === 1 ? "activity" : "activities"}`;
+}
+
+function renderHabits() {
+  const daysInMonth = getDays(currentMonth);
+  const header = document.getElementById("headerRow");
+  const body = document.getElementById("body");
+
+  header.innerHTML = "<th scope=\"col\">Habit</th>";
+  for (let day = 1; day <= daysInMonth; day++) {
+    header.innerHTML += `<th scope="col">${day}</th>`;
+  }
+  header.innerHTML += "<th scope=\"col\">%</th><th scope=\"col\"><span class=\"sr-only\">Remove</span></th>";
   body.innerHTML = "";
 
-  for(let i=1;i<=DAYS;i++) {
-    header.innerHTML += `<th>${i}</th>`;
-  }
-  header.innerHTML += "<th>%</th><th>X</th>";
-
-  // Habit rows
-  habits.forEach((h,i)=>{
-    let done = 0;
-    let row = `<tr><td>${h.name}</td>`;
-
-    h.days.forEach((d,j)=>{
-      if(d) done++;
-
-      let symbol = d ? "✅" : "❌";
-      let color = d ? "#d4edda" : "#f8d7da";
-
-      row += `
-        <td 
-          style="background:${color}; cursor:pointer; font-size:16px"
-          onclick="toggle(${i},${j})">
-          ${symbol}
-        </td>`;
+  if (!habits.length) {
+    body.innerHTML = `<tr><td class="empty-cell" colspan="${daysInMonth + 3}">Your first habit can be something small. Add one above to get started.</td></tr>`;
+  } else {
+    habits.forEach((habit, habitIndex) => {
+      const done = habit.days.filter(Boolean).length;
+      const row = document.createElement("tr");
+      let cells = `<td class="habit-name" title="${escapeHtml(habit.name)}">${escapeHtml(habit.name)}</td>`;
+      habit.days.length = daysInMonth;
+      for (let dayIndex = 0; dayIndex < daysInMonth; dayIndex++) {
+        const isDone = Boolean(habit.days[dayIndex]);
+        cells += `<td><button class="habit-toggle${isDone ? " is-done" : ""}" type="button" aria-label="${isDone ? "Unmark" : "Mark"} ${escapeHtml(habit.name)} on day ${dayIndex + 1}" aria-pressed="${isDone}" onclick="toggleHabit(${habitIndex}, ${dayIndex})">${isDone ? "✓" : "·"}</button></td>`;
+      }
+      const percentage = Math.round((done / daysInMonth) * 100);
+      cells += `<td class="percent">${percentage}%</td><td><button class="delete-button" type="button" aria-label="Delete ${escapeHtml(habit.name)}" onclick="deleteHabit(${habitIndex})">×</button></td>`;
+      row.innerHTML = cells;
+      body.appendChild(row);
     });
 
-    let percent = Math.round((done / DAYS) * 100);
-    row += `<td class='percent'>${percent}%</td>`;
-    row += `<td><button onclick='del(${i})'>X</button></td></tr>`;
-
-    body.innerHTML += row;
-  });
-
-  // ✅ DAILY PROGRESS ROW
-  let dailyRow = "<tr><td><b>Daily Done</b></td>";
-
-  for(let j=0; j<DAYS; j++){
-    let doneCount = 0;
-
-    habits.forEach(h => {
-      if(h.days[j]) doneCount++;
-    });
-
-    let total = habits.length;
-    let percent = total ? (doneCount / total) * 100 : 0;
-
-    let color = percent === 100 ? "#d4edda" :
-                percent >= 50 ? "#fff3cd" :
-                "#f8d7da";
-
-    dailyRow += `
-      <td style="background:${color}; font-weight:bold">
-        ${doneCount}/${total}
-      </td>`;
+    let dailyCells = "<td class=\"habit-name\">Daily done</td>";
+    for (let dayIndex = 0; dayIndex < daysInMonth; dayIndex++) {
+      const doneCount = habits.filter(habit => habit.days[dayIndex]).length;
+      dailyCells += `<td>${doneCount}/${habits.length}</td>`;
+    }
+    dailyCells += "<td></td><td></td>";
+    const dailyRow = document.createElement("tr");
+    dailyRow.className = "daily-row";
+    dailyRow.innerHTML = dailyCells;
+    body.appendChild(dailyRow);
   }
 
-  dailyRow += "<td></td><td></td></tr>";
-
-  body.innerHTML += dailyRow;
-
-  // Draw graph
+  updateSummary();
   drawChart();
 }
 
-// Habit actions
-function toggle(i,j){
-  habits[i].days[j] = !habits[i].days[j];
-  save(habits);
-  render();
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, character => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+  })[character]);
 }
 
-function addHabit(){
-  const name = document.getElementById('habitInput').value;
-  if(!name) return;
-
-  const DAYS = getDays(currentMonth);
-  habits.push({name, days:Array(DAYS).fill(false)});
-  save(habits);
-  render();
+function toggleHabit(habitIndex, dayIndex) {
+  habits[habitIndex].days[dayIndex] = !habits[habitIndex].days[dayIndex];
+  saveHabits();
+  renderHabits();
 }
 
-function del(i){
-  habits.splice(i,1);
-  save(habits);
-  render();
+function deleteHabit(habitIndex) {
+  habits.splice(habitIndex, 1);
+  saveHabits();
+  renderHabits();
 }
 
-function changeMonth(){
-  currentMonth = parseInt(monthSelect.value);
-  habits = load();
-  render();
+document.getElementById("habitForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const name = habitInput.value.trim();
+  if (!name) return;
+  habits.push({ name, days: Array(getDays(currentMonth)).fill(false) });
+  saveHabits();
+  habitInput.value = "";
+  renderHabits();
+  habitInput.focus();
+});
+
+monthSelect.addEventListener("change", () => {
+  currentMonth = Number(monthSelect.value);
+  loadHabits();
+  renderHabits();
+});
+
+function saveSchedule() {
+  localStorage.setItem("habitly_schedule", JSON.stringify(schedule));
 }
 
-// Sleep Data
-function getSleep(){
-  return JSON.parse(localStorage.getItem('sleep_'+currentMonth)) 
-         || Array(getDays(currentMonth)).fill(6);
+function renderSchedule() {
+  const grid = document.getElementById("scheduleGrid");
+  grid.innerHTML = "";
+
+  weekDays.forEach((day, dayIndex) => {
+    const dayItems = schedule
+      .filter(item => item.day === dayIndex)
+      .sort((first, second) => first.start.localeCompare(second.start));
+    const column = document.createElement("section");
+    column.className = "day-column";
+    column.setAttribute("aria-label", `${day} schedule`);
+    const itemsHtml = dayItems.length
+      ? dayItems.map(item => `<article class="schedule-item">
+          <span class="schedule-time">${escapeHtml(item.start)} – ${escapeHtml(item.end)}</span>
+          <span class="schedule-activity">${escapeHtml(item.activity)}</span>
+          <span class="schedule-category">${escapeHtml(item.category)}</span>
+            <button class="schedule-delete" type="button" aria-label="Remove ${escapeHtml(item.activity)} from ${day}">×</button>
+        </article>`).join("")
+      : `<p class="schedule-empty">Nothing planned yet</p>`;
+    column.innerHTML = `<h3 class="day-heading">${day}<span class="day-count">${dayItems.length || ""}</span></h3>${itemsHtml}`;
+      column.querySelectorAll(".schedule-delete").forEach((button, index) => {
+        button.dataset.scheduleId = dayItems[index].id;
+      });
+      grid.appendChild(column);
+    });
+    updateSummary();
 }
 
-function setSleep(data){
-  localStorage.setItem('sleep_'+currentMonth, JSON.stringify(data));
+document.getElementById("scheduleGrid").addEventListener("click", event => {
+    if (!(event.target instanceof Element)) return;
+    const deleteButton = event.target.closest(".schedule-delete");
+    if (deleteButton) deleteScheduleItem(deleteButton.dataset.scheduleId);
+});
+
+scheduleForm.addEventListener("submit", event => {
+  event.preventDefault();
+  const activity = document.getElementById("activityInput").value.trim();
+  const day = Number(document.getElementById("daySelect").value);
+  const start = document.getElementById("startTime").value;
+  const end = document.getElementById("endTime").value;
+  const category = document.getElementById("categorySelect").value;
+  scheduleMessage.textContent = "";
+
+  if (!activity || !start || !end || start >= end) {
+    scheduleMessage.textContent = "Choose an activity and an end time after its start time.";
+    return;
+  }
+
+  const overlaps = schedule.some(item =>
+    item.day === day && start < item.end && end > item.start
+  );
+  if (overlaps) {
+    scheduleMessage.textContent = "That time overlaps another activity on this day.";
+    return;
+  }
+
+  schedule.push({ id: crypto.randomUUID(), activity, day, start, end, category });
+  saveSchedule();
+  scheduleForm.reset();
+  document.getElementById("daySelect").value = day;
+  document.getElementById("startTime").value = start;
+  document.getElementById("endTime").value = end;
+  renderSchedule();
+  document.getElementById("activityInput").focus();
+});
+
+function deleteScheduleItem(id) {
+  schedule = schedule.filter(item => item.id !== id);
+  saveSchedule();
+  renderSchedule();
 }
 
-// Graph
-function drawChart(){
-  const canvas = document.getElementById('chart');
-  const ctx = canvas.getContext('2d');
-  const table = document.querySelector("table");
+function getSleep() {
+  return JSON.parse(localStorage.getItem("sleep_" + currentMonth)) || Array(getDays(currentMonth)).fill(6);
+}
 
-  let data = getSleep();
-  if(!data) return;
+function setSleep(data) {
+  localStorage.setItem("sleep_" + currentMonth, JSON.stringify(data));
+}
 
-  const DAYS = data.length;
+function drawChart() {
+  const canvas = document.getElementById("chart");
+  const context = canvas.getContext("2d");
+  const data = getSleep();
+  const days = data.length;
+  const width = canvas.clientWidth;
+  const height = 280;
+  if (!width) return;
+  canvas.width = width;
+  canvas.height = height;
 
-  // Match table width
-  canvas.width = table.offsetWidth;
-  canvas.height = 320;
+  const left = 28;
+  const right = 12;
+  const top = 24;
+  const bottom = 38;
+  const plotHeight = height - top - bottom;
+  const plotWidth = width - left - right;
+  const stepX = plotWidth / days;
+  context.clearRect(0, 0, width, height);
+  context.font = "10px system-ui, sans-serif";
+  context.textAlign = "right";
 
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for (let hour = 0; hour <= 12; hour += 3) {
+    const y = top + plotHeight - (hour / 12) * plotHeight;
+    context.strokeStyle = "#e8ede8";
+    context.beginPath();
+    context.moveTo(left, y);
+    context.lineTo(width - right, y);
+    context.stroke();
+    context.fillStyle = "#82918b";
+    context.fillText(`${hour}h`, left - 7, y + 3);
+  }
 
-  const stepX = canvas.width / DAYS;
+  context.beginPath();
+  context.strokeStyle = "#2f7864";
+  context.lineWidth = 2;
+  data.forEach((hours, index) => {
+    const x = left + index * stepX + stepX / 2;
+    const y = top + plotHeight - (Math.min(Number(hours) || 0, 12) / 12) * plotHeight;
+    if (index === 0) context.moveTo(x, y);
+    else context.lineTo(x, y);
+  });
+  context.stroke();
 
-  ctx.beginPath();
-
-  data.forEach((val,i)=>{
-    let x = i * stepX + stepX/2;
-    let y = canvas.height - val * 20 - 50;
-
-    if(i===0) ctx.moveTo(x,y);
-    else ctx.lineTo(x,y);
-
-    // point
-    ctx.fillRect(x-2,y-2,4,4);
-
-    // sleep label
-    ctx.font = "10px Arial";
-    ctx.fillText(val + 'h', x-8, y-10);
+  data.forEach((hours, index) => {
+    const x = left + index * stepX + stepX / 2;
+    const y = top + plotHeight - (Math.min(Number(hours) || 0, 12) / 12) * plotHeight;
+    context.beginPath();
+    context.fillStyle = "#2f7864";
+    context.arc(x, y, 2.5, 0, Math.PI * 2);
+    context.fill();
+    context.fillStyle = "#50635b";
+    context.textAlign = "center";
+    context.fillText(`${hours}h`, x, Math.max(12, y - 9));
+    context.fillStyle = "#82918b";
+    context.fillText(String(index + 1), x, height - 12);
   });
 
-  ctx.stroke();
-
-  // ✅ DRAW ALL DATES (ROTATED)
-  ctx.font = "10px Arial";
-
-  data.forEach((_, i)=>{
-    let x = i * stepX + stepX/2;
-
-    ctx.save();
-    ctx.translate(x, canvas.height - 5);
-    ctx.rotate(-Math.PI / 4); // rotate 45°
-    ctx.fillText((i+1), 0, 0);
-    ctx.restore();
-  });
-
-  // click to edit
-  canvas.onclick = function(e){
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const day = Math.floor(x / stepX);
-
-    if(day < 0 || day >= DAYS) return;
-
-    let hours = prompt("Enter sleep hours:", data[day]);
-    if(hours !== null){
-      data[day] = parseInt(hours) || 0;
-      setSleep(data);
-      drawChart();
+  canvas.onclick = event => {
+    const rectangle = canvas.getBoundingClientRect();
+    const canvasX = (event.clientX - rectangle.left) * (canvas.width / rectangle.width);
+    const dayIndex = Math.floor((canvasX - left) / stepX);
+    if (dayIndex < 0 || dayIndex >= days) return;
+    const hours = prompt(`How many hours did you sleep on day ${dayIndex + 1}?`, data[dayIndex]);
+    if (hours === null) return;
+    const parsedHours = Number(hours);
+    if (!Number.isFinite(parsedHours) || parsedHours < 0 || parsedHours > 24) {
+      alert("Enter a number of hours between 0 and 24.");
+      return;
     }
+    data[dayIndex] = parsedHours;
+    setSleep(data);
+    drawChart();
   };
 }
-// PWA
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw.js');
+
+window.addEventListener("resize", drawChart);
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").catch(error => {
+    console.error("Service worker registration failed:", error);
+  });
 }
 
-// Start
-window.onload = render;
+loadHabits();
+renderHabits();
+renderSchedule();
 </script>
-
 </body>
 </html>

@@ -1,11 +1,11 @@
 {
-  "name": "Smart Habit Tracker",
-  "short_name": "Habits",
+  "name": "Habitly — Habits & Schedule",
+  "short_name": "Habitly",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#4facfe",
+  "background_color": "#f5f7f3",
+  "theme_color": "#172b2a",
   "icons": [
     {
       "src": "./Icons/icon-192.png",
